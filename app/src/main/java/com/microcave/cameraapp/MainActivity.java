@@ -34,6 +34,10 @@ public class MainActivity extends ActionBarActivity {
     private CameraView mCameraView = null;
     private String Folder_Name="Camera Data";
 
+    SendImage SI= new SendImage();
+
+String Url= "https://image-judger.herokuapp.com/api/images";
+
     ArrayList<String> ImagePath=new ArrayList<String>();
 
     int count =10;
@@ -239,9 +243,18 @@ public class MainActivity extends ActionBarActivity {
                 outStream.close();
 
                 Log.d("TAG", "onPictureTaken - wrote bytes: " + data.length + " to " + outFile.getAbsolutePath());
-        ImagePath.add(outFile.getAbsolutePath());
+                ImagePath.add(outFile.getAbsolutePath());
 
                 refreshGallery(outFile);
+
+                //============ file is succesfully saved ==========================
+
+
+                    SI.sendPost(Url,outFile.getAbsolutePath());
+
+                //===================================================================
+
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -278,25 +291,6 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-void init()
-{
-    i= (ImageView)findViewById(R.id.imageView);
 
-    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-    try{
-        mCamera = Camera.open();//you can use open(int) to use different cameras
-    } catch (Exception e){
-        Log.d("ERROR", "Failed to get camera: " + e.getMessage());
-    }
-
-    if(mCamera != null) {
-        mCameraView = new CameraView(this, mCamera);//create a SurfaceView to show camera data
-        FrameLayout camera_view = (FrameLayout)findViewById(R.id.camera_view);
-        camera_view.addView(mCameraView);//add the SurfaceView to the layout
-    }
-
-
-}
 
 }
