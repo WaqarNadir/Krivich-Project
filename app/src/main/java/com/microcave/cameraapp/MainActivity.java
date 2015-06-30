@@ -184,7 +184,7 @@ String Url= "https://image-judger.herokuapp.com/api/images";
             if(count==5) {
                 t.cancel();
                 count=10;
-                Log.e("updte dasply", "");
+                Log.e("update display", "");
 
                 timer= new Timer();
                 ChangeImage= new ChangePhoto();
