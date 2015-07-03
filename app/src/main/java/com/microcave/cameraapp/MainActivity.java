@@ -1,6 +1,8 @@
 package com.microcave.cameraapp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -10,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -33,17 +36,19 @@ public class MainActivity extends ActionBarActivity {
     private Camera mCamera = null;
     private CameraView mCameraView = null;
     private String Folder_Name="Camera Data";
+    OrientationEventListener listner;
+    public Context c;
 
     SendImage SI= new SendImage();
 
 String Url= "https://image-judger.herokuapp.com/api/images";
 
     ArrayList<String> ImagePath=new ArrayList<String>();
-
     int count =10;
     ImageView i;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        c=this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
          i= (ImageView)findViewById(R.id.imageView);
@@ -62,7 +67,6 @@ String Url= "https://image-judger.herokuapp.com/api/images";
             camera_view.addView(mCameraView);//add the SurfaceView to the layout
         }
 
-
         ImageButton imgClose = (ImageButton)findViewById(R.id.imgClose);
         imgClose.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,31 +76,37 @@ String Url= "https://image-judger.herokuapp.com/api/images";
             }
         });
 
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
     }
-
     @Override
     protected void onPause() {
         super.onPause();
+
+        Log.e("Camera Status", "Pause called");
+        mCamera.release();
+
         mCameraView.getHolder().removeCallback(mCameraView);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.e("Camera Status", "resume called");
+        if(mCamera==null)
+        {
+            mCamera=Camera.open();
+        }
         mCameraView.getHolder().addCallback(mCameraView);
+       // mCameraView.change(mCamera);
+
         timer = new Timer();
         ClickPhoto= new TakePhoto();
         ChangeImage= new ChangePhoto();
         t=new Timer();
+        count=10;
 
-
-        updateDisplay();
+        timer.schedule(ChangeImage, 0, 1000);//Update text every second
     }
 
 
@@ -179,7 +189,6 @@ String Url= "https://image-judger.herokuapp.com/api/images";
         @Override
         public void run() {
 
-            mCamera.startPreview();
             mCamera.takePicture(null, null, jpegCallback);
             if(count==5) {
                 t.cancel();
