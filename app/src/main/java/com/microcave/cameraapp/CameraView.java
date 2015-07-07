@@ -12,7 +12,7 @@ import android.view.WindowManager;
 import java.io.IOException;
 
 public class CameraView extends SurfaceView implements SurfaceHolder.Callback{
-
+static boolean rotation_In_progress=false;
     private SurfaceHolder mHolder;
     private Camera mCamera;
     public Thread t;
@@ -34,7 +34,6 @@ Context c;
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
         try{
             //when the surface is created, we can set the camera to draw images in this surfaceholder
-
             if(mCamera==null)
             {
                 mCamera=Camera.open();
@@ -60,12 +59,14 @@ public boolean isPreviewRunning= false;
             Display display = ((WindowManager)c.getSystemService(c.WINDOW_SERVICE)).getDefaultDisplay();
         if(display.getRotation() == Surface.ROTATION_0)
         {
+            rotation_In_progress=true;
             parameters.setPreviewSize(height, width);
             mCamera.setDisplayOrientation(90);
         }
 
         if(display.getRotation() == Surface.ROTATION_90)
         {
+            rotation_In_progress=true;
             parameters.setPreviewSize(width, height);
             mCamera.setDisplayOrientation(0);
 
@@ -78,11 +79,13 @@ public boolean isPreviewRunning= false;
 //
         if(display.getRotation() == Surface.ROTATION_270)
         {
+            rotation_In_progress=true;
             parameters.setPreviewSize(width, height);
             mCamera.setDisplayOrientation(180);
         }
 //
 //        mCamera.setParameters(parameters);
+        rotation_In_progress=false;
         start();
     }
 
