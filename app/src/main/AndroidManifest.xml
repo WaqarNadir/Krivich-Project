@@ -42,6 +42,11 @@
             android:enabled="true"
             android:exported="true" >
         </receiver>
+
+        <service
+            android:name=".uploadingService"
+            android:exported="false" >
+        </service>
     </application>
 
 </manifest>

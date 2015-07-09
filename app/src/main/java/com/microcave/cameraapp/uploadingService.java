@@ -1,11 +1,12 @@
 package com.microcave.cameraapp;
 
+import android.app.IntentService;
+import android.content.Intent;
 import android.util.Log;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.HttpHostConnectException;
@@ -19,19 +20,37 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.UnknownHostException;
 
 
-public class SendImage {
-    public static void sendPost(String url, String imagePath) throws IOException, ClientProtocolException {
+public class uploadingService extends IntentService {
+    public uploadingService() {
+        super("uploadingService");
+    }
+
+    String url;
+    String path;
+    @Override
+    protected void onHandleIntent(Intent intent) {
+
+        url=intent.getStringExtra("url");
+        path=intent.getStringExtra("path");
+        Log.e("url",url);
+        Log.e("path",path);
+
+        sendPost(url, path);
+
+
+    }
+
+    public  void sendPost(String url, String imagePath)  {
         try {
             HttpClient httpclient = new DefaultHttpClient();
             httpclient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
 
             HttpPost httppost = new HttpPost(url);
             File file = new File(imagePath);
-            Log.e("File path " , ""+file.toString());
+            Log.e("File path ", "" + file.toString());
 
             MultipartEntity mpEntity = new MultipartEntity();
             ContentBody cbFile = new FileBody(file, "image/jpeg");
@@ -46,7 +65,7 @@ public class SendImage {
             Log.e("res.entity" , response.getStatusLine()+ "");
 
             if (resEntity != null) {
-                String val=EntityUtils.toString(resEntity);
+                String val= EntityUtils.toString(resEntity);
 
 
                 JSONObject obj= new JSONObject(val);
@@ -63,6 +82,8 @@ public class SendImage {
             }
 
             httpclient.getConnectionManager().shutdown();
+
+
         }catch (HttpHostConnectException e)
         {
             Log.e("SendImage", e.getMessage());
@@ -87,6 +108,4 @@ public class SendImage {
     }
 
 
-
 }
-

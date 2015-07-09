@@ -86,6 +86,7 @@ public boolean isPreviewRunning= false;
 //
 //        mCamera.setParameters(parameters);
         rotation_In_progress=false;
+        Log.e("rotation value ", ""+rotation_In_progress);
         start();
     }
 

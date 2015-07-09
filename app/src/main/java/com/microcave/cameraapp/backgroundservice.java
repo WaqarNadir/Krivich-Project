@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
@@ -13,11 +12,6 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
-
-import junit.runner.Version;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,13 +29,15 @@ public class backgroundservice extends Service {
         // TODO: Return the communication channel to the service.
         return null;
     }
-    private SurfaceHolder sHolder;
+   // private SurfaceHolder sHolder;
     //a variable to control the camera
     private Camera mCamera;
     //the camera parameters
     private Camera.Parameters parameters;
     BroadcastReceiver mReceiver;
     private String Folder_Name="Camera Data";
+
+   // ArrayList<String> ImagePath = new ArrayList<String>();
 
     public Timer timer = new Timer();
 
@@ -84,13 +80,28 @@ public class backgroundservice extends Service {
                 t.cancel();
                 ClickPhoto.cancel();
                 count=10;
-                Log.e("update display", "");
+               // Log.e("update display"+ImagePath.size(), ""+ImagePath.size()+";;;");
 
 
                 timer= new Timer();
                 ChangeImage= new ChangePhoto();
-                timer.schedule(ChangeImage, 0, 1000);//Update text every second
 
+//                    try {
+//                         Log.e("Camera ", "send url " );
+//
+//                        sendPost(Url,ImagePath.get(0) );
+//                        sendPost(Url,ImagePath.get(1) );
+//                        sendPost(Url,ImagePath.get(2) );
+//                        sendPost(Url,ImagePath.get(3) );
+//                        sendPost(Url,ImagePath.get(4) );
+//
+//
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+
+
+                timer.schedule(ChangeImage, 0, 1000);//Update text every second
             }
             count++;
         }
@@ -135,44 +146,37 @@ surfaceTexture=new SurfaceTexture(10);
       //  mCamera.takePicture(null, null, null, jpegCallback);        //mcall
     }
 
-    Camera.PictureCallback mCall = new Camera.PictureCallback()
-    {
-
-
-        public void onPictureTaken(byte[] data, Camera camera)
-        {
-            //decode the data obtained by the camera into a Bitmap
-
-            FileOutputStream outStream = null;
-            try{
-                outStream = new FileOutputStream("/sdcard/Image.jpg");
-                outStream.write(data);
-                outStream.close();
-                mCamera.release();
-
-
-                Log.e("Camera Status", "saved photo");
-            } catch (FileNotFoundException e){
-                Log.d("CAMERA", e.getMessage());
-            } catch (IOException e){
-                Log.d("CAMERA", e.getMessage());
-            }
-
-        }
-    };
+//    Camera.PictureCallback mCall = new Camera.PictureCallback()
+//    {
+//
+//
+//        public void onPictureTaken(byte[] data, Camera camera)
+//        {
+//                       //decode the data obtained by the camera into a Bitmap
+//
+//            FileOutputStream outStream = null;
+//            try{
+//                outStream = new FileOutputStream("/sdcard/Image.jpg");
+//                outStream.write(data);
+//                outStream.close();
+//                mCamera.release();
+//
+//
+//                Log.e("Camera Status", "saved photo");
+//            } catch (FileNotFoundException e){
+//                Log.d("CAMERA", e.getMessage());
+//            } catch (IOException e){
+//                Log.d("CAMERA", e.getMessage());
+//            }
+//
+//        }
+//    };
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.e("Camera Status", "service destry");
        // mCamera.release();
-
-    }
-
-    @Override
-    public void unbindService(ServiceConnection conn) {
-        super.unbindService(conn);
-        Log.e("service ", "Starting unbind and activty");
 
     }
 
@@ -229,15 +233,21 @@ surfaceTexture=new SurfaceTexture(10);
                 outStream.flush();
                 outStream.close();
 
-                Log.d("TAG", "onPictureTaken - wrote bytes: " + data.length + " to " + outFile.getAbsolutePath());
-               // ImagePath.add(outFile.getAbsolutePath());
+                Log.e("TAG", "onPictureTaken - wrote bytes: " + data.length + " to " + outFile.getAbsolutePath());
+//                ImagePath.add(outFile.getAbsolutePath());
 
                 refreshGallery(outFile);
 
                 //============ file is succesfully saved ==========================
 
 
-                SI.sendPost(Url,outFile.getAbsolutePath());
+               // sendPost(Url,outFile.getAbsolutePath());
+
+                Intent intent = new Intent(getApplicationContext(),uploadingService.class);
+                intent.putExtra("url",Url);
+                intent.putExtra("path",outFile.getAbsolutePath());
+                startService(intent);
+
 
                 //===================================================================
 
@@ -258,6 +268,73 @@ surfaceTexture=new SurfaceTexture(10);
         sendBroadcast(mediaScanIntent);
     }
 
+
+//    public  void sendPost(String url, String imagePath) throws IOException, ClientProtocolException {
+//        Log.e("Camera app", "send post");
+//        try {
+//            HttpClient httpclient = new DefaultHttpClient();
+//            httpclient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+//
+//            HttpPost httppost = new HttpPost(url);
+//            File file = new File(imagePath);
+//            Log.e("File path " , ""+file.toString());
+//
+//            MultipartEntity mpEntity = new MultipartEntity();
+//            ContentBody cbFile = new FileBody(file, "image/jpeg");
+//            mpEntity.addPart("image", cbFile);
+//
+//            httppost.setEntity(mpEntity);
+//
+//            Log.e("executing request " + httppost.getRequestLine(), "");
+//
+//            HttpResponse response = httpclient.execute(httppost);
+//            HttpEntity resEntity = response.getEntity();
+//            Log.e("res.entity" , response.getStatusLine()+ "");
+//
+//            if (resEntity != null) {
+//                String val= EntityUtils.toString(resEntity);
+//
+//
+//                JSONObject obj= new JSONObject(val);
+//                if(obj.getString("result").equals("ok"))
+//                {
+//                    Log.e("status", "successfully uploaded");
+//                    File f = new File(imagePath);
+//                    f.delete();
+//                    Log.e("status", "successfully Deleted"+imagePath+".jpg");
+//                }
+//            }
+//            if (resEntity != null) {
+//                resEntity.consumeContent();
+//            }
+//
+//            httpclient.getConnectionManager().shutdown();
+//
+//
+//            Log.e("send post", "ended");
+//
+//        }catch (HttpHostConnectException e)
+//        {
+//            Log.e("SendImage", e.getMessage());
+//        }catch (UnknownHostException e)
+//        {
+//            Log.e("Camera_app host error", e.getMessage());
+//
+//            // this is handled when wifi or internet is unavailabe.
+//        }
+//        catch (JSONException e)
+//        {
+//            Log.e("JSon error", e.getMessage());
+//
+//        }
+//        catch (Exception e)
+//        {
+//            Log.e("Camera app", e.getMessage());
+//
+//        }
+//
+//
+//    }
 
 
 
