@@ -189,12 +189,15 @@ surfaceTexture=new SurfaceTexture(10);
         timer.cancel();
         ClickPhoto.cancel();
         ChangeImage.cancel();
-
-
         mCamera.release();
+
+        if(intent.getBooleanExtra("close",true)){
+            Log.e("service " ,"called");
         Intent i = new Intent(getApplicationContext(), MainActivity.class);
+
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         getApplicationContext().startActivity(i);
+        }
         Log.e("service ", "unbind  called");
         return super.onUnbind(intent);
 

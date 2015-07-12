@@ -34,7 +34,7 @@ public class MainActivity extends ActionBarActivity {
     private CameraView mCameraView = null;
     private String Folder_Name = "Camera Data";
     OrientationEventListener listner;
-    public Context c;
+
 
     public boolean Serviceresult;
 
@@ -46,6 +46,7 @@ public class MainActivity extends ActionBarActivity {
     int count = 10;
     ImageView i;
     Intent is;
+    public Boolean close=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,12 +74,26 @@ public class MainActivity extends ActionBarActivity {
             camera_view.addView(mCameraView);//add the SurfaceView to the layout
         }
 
+
         ImageButton imgClose = (ImageButton) findViewById(R.id.imgClose);
         imgClose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // System.exit(0);
-                Delete();
+                //Delete();
+                finish();
+                try {
+                    close=false;
+                    Intent i=new Intent(c, backgroundservice.class);
+                    i.putExtra("close",false);
+                    c.stopService(i);
+                    c.unbindService(mServerConn);
+                }catch(Exception e)
+                {
+                    Log.e("Camera APP", "Service is not registered yet");
+                }
+
+
             }
         });
         listner = new OrientationEventListener(c) {
@@ -108,7 +123,7 @@ public class MainActivity extends ActionBarActivity {
 
 
     }
-
+    public Context c = this;
     @Override
     protected void onPause() {
         super.onPause();
@@ -121,8 +136,10 @@ public class MainActivity extends ActionBarActivity {
 
         s.interrupt();
 
-        this.bindService(is, mServerConn, BIND_AUTO_CREATE);
-        this.startService(is);
+        if(close) {
+            this.bindService(is, mServerConn, BIND_AUTO_CREATE);
+            this.startService(is);
+        }
         isconnected = true;
         Serviceresult = false;
         run_thread = false;
@@ -156,7 +173,8 @@ public class MainActivity extends ActionBarActivity {
         if (isconnected) {
             mCamera = null;
             Log.e("is connected ", "true");
-            this.stopService(new Intent(this, backgroundservice.class));
+            Intent i =new Intent(this, backgroundservice.class);
+            this.stopService(i);
             this.unbindService(mServerConn);
             Serviceresult = false;        //-----
             try {
@@ -403,8 +421,18 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        this.unbindService(mServerConn);
-        this.stopService(is);
+        try {
+            Intent intent =new Intent(this, uploadingService.class);
+            intent.putExtra("url",Url);
+            intent.putExtra("path","");
+            startService(intent);
+            is.putExtra("close", false);
+            this.unbindService(mServerConn);
+            this.stopService(is);
+        }catch (Exception e)
+        {
+            Log.e("Camera app ", "service not registered");
+        }
         if (mCamera != null) {
             mCamera.release();
 
