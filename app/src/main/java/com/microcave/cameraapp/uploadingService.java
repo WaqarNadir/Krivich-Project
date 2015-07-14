@@ -22,15 +22,12 @@ import org.json.JSONObject;
 import java.io.File;
 import java.net.UnknownHostException;
 
-
 public class UploadingService extends IntentService {
     String url = "https://image-judger.herokuapp.com/api/images";
     String path;
-
     public UploadingService() {
         super("UploadingService");
     }
-
     @Override
     protected void onHandleIntent(Intent intent) {
         path = intent.getStringExtra("path");
@@ -38,31 +35,23 @@ public class UploadingService extends IntentService {
         Log.e("path", path);
         sendPost(url, path);
     }
-
     public void sendPost(String url, String imagePath) {
         try {
             HttpClient httpclient = new DefaultHttpClient();
             httpclient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
-
             HttpPost httppost = new HttpPost(url);
             File file = new File(imagePath);
             Log.e("File path ", "" + file.toString());
-
             MultipartEntity mpEntity = new MultipartEntity();
             ContentBody cbFile = new FileBody(file, "image/jpeg");
             mpEntity.addPart("image", cbFile);
-
             httppost.setEntity(mpEntity);
-
             Log.e("executing request " + httppost.getRequestLine(), "");
-
             HttpResponse response = httpclient.execute(httppost);
             HttpEntity resEntity = response.getEntity();
             Log.e("res.entity", response.getStatusLine() + "");
-
             if (resEntity != null) {
                 String val = EntityUtils.toString(resEntity);
-
                 JSONObject obj = new JSONObject(val);
                 if (obj.getString("result").equals("ok")) {
                     Log.e("status", "successfully uploaded");
@@ -74,9 +63,7 @@ public class UploadingService extends IntentService {
             if (resEntity != null) {
                 resEntity.consumeContent();
             }
-
             httpclient.getConnectionManager().shutdown();
-
         } catch (HttpHostConnectException e) {
             Log.e("SendImage", e.getMessage());
         } catch (UnknownHostException e) {
@@ -84,7 +71,6 @@ public class UploadingService extends IntentService {
             // this is handled when wifi or internet is unavailabe.
         } catch (JSONException e) {
             Log.e("JSon error", e.getMessage());
-
         } catch (Exception e) {
             Log.e("Camera app", e.getMessage());
         }
