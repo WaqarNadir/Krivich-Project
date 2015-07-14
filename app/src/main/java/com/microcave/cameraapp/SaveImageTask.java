@@ -16,8 +16,9 @@ import java.io.IOException;
  * Created by Vicky on 7/14/2015.
  */
 public class SaveImageTask extends AsyncTask<byte[], Void, Void> {
-    private String folderName = "Camera Data";
     Context context;
+    private String folderName = "Camera Data";
+
     @Override
     protected Void doInBackground(byte[]... data) {
         FileOutputStream outStream = null;
@@ -55,12 +56,12 @@ public class SaveImageTask extends AsyncTask<byte[], Void, Void> {
     public void refreshGallery(File file) {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         mediaScanIntent.setData(Uri.fromFile(file));
-         context.sendBroadcast(mediaScanIntent);
+        context.sendBroadcast(mediaScanIntent);
     }
 
     public void setContext(Context c) {
- context=c;
-}
+        context = c;
+    }
 
 
 }

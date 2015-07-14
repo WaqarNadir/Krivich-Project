@@ -2,28 +2,20 @@ package com.microcave.cameraapp;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
-import com.microcave.cameraapp.SaveImageTask;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class backgroundservice extends Service {
+public class BackgroundService extends Service {
     public Timer timer = new Timer();
     public Timer t = new Timer();
     public TimerTask clickPhoto = new TakePhoto();
@@ -36,7 +28,7 @@ public class backgroundservice extends Service {
     private Camera mCamera;
     Camera.PictureCallback jpegCallback = new Camera.PictureCallback() {
         public void onPictureTaken(byte[] data, Camera camera) {
-            SaveImageTask saveImageTask=new SaveImageTask();
+            SaveImageTask saveImageTask = new SaveImageTask();
             saveImageTask.setContext(c);
             saveImageTask.execute(data);
             reset();
@@ -45,9 +37,8 @@ public class backgroundservice extends Service {
     };
     //the camera parameters
     private Camera.Parameters parameters;
-    private String folderName = "Camera Data";
 
-    public backgroundservice() {
+    public BackgroundService() {
     }
 
     @Override
@@ -60,7 +51,7 @@ public class backgroundservice extends Service {
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
 
-        c= getApplicationContext();
+        c = getApplicationContext();
         IntentFilter filter = new IntentFilter(Intent.ACTION_USER_PRESENT);
         // filter.addAction(Intent.ACTION_SCREEN_OFF);
         mReceiver = new ScreenLockReciever();

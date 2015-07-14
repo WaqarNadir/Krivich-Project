@@ -4,12 +4,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.hardware.Camera;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -22,9 +18,6 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -61,7 +54,7 @@ public class MainActivity extends ActionBarActivity {
     private Camera mCamera = null;
     Camera.PictureCallback jpegCallback = new Camera.PictureCallback() {
         public void onPictureTaken(byte[] data, Camera camera) {
-            SaveImageTask saveImageTask=new SaveImageTask();
+            SaveImageTask saveImageTask = new SaveImageTask();
             saveImageTask.setContext(c);
             saveImageTask.execute(data);
             reset();
@@ -76,7 +69,7 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         Log.e("activity ", "started");
         serviceResult = true;
-        is = new Intent(this, backgroundservice.class);
+        is = new Intent(this, BackgroundService.class);
 
         setContentView(R.layout.activity_main);
         i = (ImageView) findViewById(R.id.imageView);
@@ -94,7 +87,7 @@ public class MainActivity extends ActionBarActivity {
             FrameLayout camera_view = (FrameLayout) findViewById(R.id.camera_view);
             camera_view.addView(mCameraView);//add the SurfaceView to the layout
         }
-        
+
         ImageButton imgClose = (ImageButton) findViewById(R.id.imgClose);
         imgClose.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -103,7 +96,7 @@ public class MainActivity extends ActionBarActivity {
                 finish();
                 try {
                     close = false;
-                    Intent i = new Intent(c, backgroundservice.class);
+                    Intent i = new Intent(c, BackgroundService.class);
                     i.putExtra("close", false);
                     c.stopService(i);
                     c.unbindService(mServerConn);
@@ -115,9 +108,11 @@ public class MainActivity extends ActionBarActivity {
         listner = new OrientationEventListener(c) {
             @Override
             public void onOrientationChanged(int orientation) {
+
                 if (mCamera == null) {
                     mCamera = Camera.open();
                 }
+
                 if (orientation == 180 || orientation == 90 || orientation == 270) {
                     CameraView.rotationInProgress = true;
                     Log.e("Camera Status", orientation + "" + CameraView.rotationInProgress);
@@ -152,7 +147,7 @@ public class MainActivity extends ActionBarActivity {
         if (isConnected) {
             mCamera = null;
             Log.e("is connected ", "true");
-            Intent i = new Intent(this, backgroundservice.class);
+            Intent i = new Intent(this, BackgroundService.class);
             this.stopService(i);
             this.unbindService(mServerConn);
             serviceResult = false;        //-----
@@ -179,7 +174,7 @@ public class MainActivity extends ActionBarActivity {
         mCamera.startPreview();
     }
 
-    void Delete() {
+    void delete() {
         try {
             for (int i = 0; i < ImagePath.size(); i++) {
 
@@ -214,6 +209,8 @@ public class MainActivity extends ActionBarActivity {
 
             Log.e("Main activty", "Destroy called;");
         }
+
+
     }
 
     private class CameraIntializer extends Thread {
@@ -290,6 +287,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public class TakePhoto extends TimerTask {
+
         @Override
         public void run() {
             if (!CameraView.rotationInProgress) {

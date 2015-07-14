@@ -34,7 +34,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".backgroundservice"></service>
+        <service android:name=".BackgroundService"></service>
 
         <receiver
             android:name=".ScreenLockReciever"
