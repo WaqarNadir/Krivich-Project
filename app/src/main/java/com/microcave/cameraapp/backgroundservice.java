@@ -2,6 +2,9 @@ package com.microcave.cameraapp;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import com.microcave.cameraapp.SaveImageTask;
+
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.ImageFormat;
@@ -21,6 +24,29 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class backgroundservice extends Service {
+    public Timer timer = new Timer();
+    public Timer t = new Timer();
+    public TimerTask clickPhoto = new TakePhoto();
+    BroadcastReceiver mReceiver;
+    ChangePhoto changeImage = new ChangePhoto();
+    int count = 5;
+    SurfaceTexture surfaceTexture;
+    Context c;
+
+    private Camera mCamera;
+    Camera.PictureCallback jpegCallback = new Camera.PictureCallback() {
+        public void onPictureTaken(byte[] data, Camera camera) {
+            SaveImageTask saveImageTask=new SaveImageTask();
+            saveImageTask.setContext(c);
+            saveImageTask.execute(data);
+            reset();
+            Log.d("TAG", "onPictureTaken - jpeg");
+        }
+    };
+    //the camera parameters
+    private Camera.Parameters parameters;
+    private String folderName = "Camera Data";
+
     public backgroundservice() {
     }
 
@@ -29,98 +55,19 @@ public class backgroundservice extends Service {
         // TODO: Return the communication channel to the service.
         return null;
     }
-   // private SurfaceHolder sHolder;
-    //a variable to control the camera
-    private Camera mCamera;
-    //the camera parameters
-    private Camera.Parameters parameters;
-    BroadcastReceiver mReceiver;
-    private String Folder_Name="Camera Data";
 
-   // ArrayList<String> ImagePath = new ArrayList<String>();
-
-    public Timer timer = new Timer();
-
-    public   Timer t=new Timer();
-    public  TimerTask ClickPhoto= new TakePhoto();
-    ChangePhoto ChangeImage= new ChangePhoto();
-    int count=5;
-
-    SendImage SI= new SendImage();
-    String Url= "https://image-judger.herokuapp.com/api/images";
-
-
-    public   class ChangePhoto extends  TimerTask
-    {
-
-        @Override
-        public void run() {
-                        count--;
-            Log.e("count",""+count);
-                        if (count == 0) {
-                            timer.cancel();
-                            t = new Timer();
-                            ClickPhoto = new TakePhoto();
-                            Log.e("count","0");
-                            t.schedule(ClickPhoto, 0, 10000);//10 =2
-                        }
-        }
-    }
-
-    public   class TakePhoto extends  TimerTask
-    {
-        @Override
-        public void run() {
-            Log.e("camera ", "pic" + count);
-
-                    mCamera.takePicture(null, null, jpegCallback);
-
-
-            if(count==5) {
-                t.cancel();
-                ClickPhoto.cancel();
-                count=10;
-               // Log.e("update display"+ImagePath.size(), ""+ImagePath.size()+";;;");
-
-
-                timer= new Timer();
-                ChangeImage= new ChangePhoto();
-
-//                    try {
-//                         Log.e("Camera ", "send url " );
-//
-//                        sendPost(Url,ImagePath.get(0) );
-//                        sendPost(Url,ImagePath.get(1) );
-//                        sendPost(Url,ImagePath.get(2) );
-//                        sendPost(Url,ImagePath.get(3) );
-//                        sendPost(Url,ImagePath.get(4) );
-//
-//
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-
-
-                timer.schedule(ChangeImage, 0, 1000);//Update text every second
-            }
-            count++;
-        }
-    }
-
-
-    SurfaceTexture surfaceTexture;
     @Override
     public void onStart(Intent intent, int startId) {
         super.onStart(intent, startId);
 
-
+        c= getApplicationContext();
         IntentFilter filter = new IntentFilter(Intent.ACTION_USER_PRESENT);
-       // filter.addAction(Intent.ACTION_SCREEN_OFF);
+        // filter.addAction(Intent.ACTION_SCREEN_OFF);
         mReceiver = new ScreenLockReciever();
         registerReceiver(mReceiver, filter);
 
-       mCamera = Camera.open();
-surfaceTexture=new SurfaceTexture(10);
+        mCamera = Camera.open();
+        surfaceTexture = new SurfaceTexture(10);
         try {
             mCamera.setPreviewTexture(surfaceTexture);
         } catch (IOException e1) {
@@ -136,48 +83,19 @@ surfaceTexture=new SurfaceTexture(10);
         mCamera.setPreviewCallbackWithBuffer(null);
 
         timer = new Timer();
-        ClickPhoto = new TakePhoto();
-        ChangeImage = new ChangePhoto();
+        clickPhoto = new TakePhoto();
+        changeImage = new ChangePhoto();
         t = new Timer();
         count = 10;
 
-        timer.schedule(ChangeImage, 0, 1000);//Update text every second
-
-      //  mCamera.takePicture(null, null, null, jpegCallback);        //mcall
+        timer.schedule(changeImage, 0, 1000);//Update text every second
     }
-
-//    Camera.PictureCallback mCall = new Camera.PictureCallback()
-//    {
-//
-//
-//        public void onPictureTaken(byte[] data, Camera camera)
-//        {
-//                       //decode the data obtained by the camera into a Bitmap
-//
-//            FileOutputStream outStream = null;
-//            try{
-//                outStream = new FileOutputStream("/sdcard/Image.jpg");
-//                outStream.write(data);
-//                outStream.close();
-//                mCamera.release();
-//
-//
-//                Log.e("Camera Status", "saved photo");
-//            } catch (FileNotFoundException e){
-//                Log.d("CAMERA", e.getMessage());
-//            } catch (IOException e){
-//                Log.d("CAMERA", e.getMessage());
-//            }
-//
-//        }
-//    };
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.e("Camera Status", "service destry");
-       // mCamera.release();
-
+        // mCamera.release();
     }
 
     @Override
@@ -187,158 +105,57 @@ surfaceTexture=new SurfaceTexture(10);
 
         t.cancel();
         timer.cancel();
-        ClickPhoto.cancel();
-        ChangeImage.cancel();
+        clickPhoto.cancel();
+        changeImage.cancel();
         mCamera.release();
 
-        if(intent.getBooleanExtra("close",true)){
-            Log.e("service " ,"called");
-        Intent i = new Intent(getApplicationContext(), MainActivity.class);
+        if (intent.getBooleanExtra("close", true)) {
+            Log.e("service ", "called");
+            Intent i = new Intent(getApplicationContext(), MainActivity.class);
 
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        getApplicationContext().startActivity(i);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getApplicationContext().startActivity(i);
         }
         Log.e("service ", "unbind  called");
         return super.onUnbind(intent);
-
     }
+
     void reset() {
         mCamera.startPreview();
     }
 
-    Camera.PictureCallback jpegCallback = new Camera.PictureCallback() {
-        public void onPictureTaken(byte[] data, Camera camera) {
-            new SaveImageTask().execute(data);
-            reset();
-            Log.d("TAG", "onPictureTaken - jpeg");
-        }
 
-    };
-
-
-    public class SaveImageTask extends AsyncTask<byte[], Void, Void> {
+    public class ChangePhoto extends TimerTask {
 
         @Override
-        protected Void doInBackground(byte[]... data) {
-            FileOutputStream outStream = null;
-
-            // Write to SD Card
-            try {
-                File sdCard = Environment.getExternalStorageDirectory();
-                File dir = new File (sdCard.getAbsolutePath() + "/"+Folder_Name);
-                dir.mkdirs();
-
-                String fileName = String.format("%d.jpg", System.currentTimeMillis());
-                File outFile = new File(dir, fileName);
-
-                outStream = new FileOutputStream(outFile);
-                outStream.write(data[0]);
-                outStream.flush();
-                outStream.close();
-
-                Log.e("TAG", "onPictureTaken - wrote bytes: " + data.length + " to " + outFile.getAbsolutePath());
-//                ImagePath.add(outFile.getAbsolutePath());
-
-                refreshGallery(outFile);
-
-                //============ file is succesfully saved ==========================
-
-
-               // sendPost(Url,outFile.getAbsolutePath());
-
-                Intent intent = new Intent(getApplicationContext(),uploadingService.class);
-                intent.putExtra("url",Url);
-                intent.putExtra("path",outFile.getAbsolutePath());
-                startService(intent);
-
-
-                //===================================================================
-
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
+        public void run() {
+            count--;
+            Log.e("count", "" + count);
+            if (count == 0) {
+                timer.cancel();
+                t = new Timer();
+                clickPhoto = new TakePhoto();
+                Log.e("count", "0");
+                t.schedule(clickPhoto, 0, 10000);//10 =2
             }
-            return null;
         }
-
-    }
-    public void refreshGallery(File file) {
-        Intent mediaScanIntent = new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        mediaScanIntent.setData(Uri.fromFile(file));
-        sendBroadcast(mediaScanIntent);
     }
 
-
-//    public  void sendPost(String url, String imagePath) throws IOException, ClientProtocolException {
-//        Log.e("Camera app", "send post");
-//        try {
-//            HttpClient httpclient = new DefaultHttpClient();
-//            httpclient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
-//
-//            HttpPost httppost = new HttpPost(url);
-//            File file = new File(imagePath);
-//            Log.e("File path " , ""+file.toString());
-//
-//            MultipartEntity mpEntity = new MultipartEntity();
-//            ContentBody cbFile = new FileBody(file, "image/jpeg");
-//            mpEntity.addPart("image", cbFile);
-//
-//            httppost.setEntity(mpEntity);
-//
-//            Log.e("executing request " + httppost.getRequestLine(), "");
-//
-//            HttpResponse response = httpclient.execute(httppost);
-//            HttpEntity resEntity = response.getEntity();
-//            Log.e("res.entity" , response.getStatusLine()+ "");
-//
-//            if (resEntity != null) {
-//                String val= EntityUtils.toString(resEntity);
-//
-//
-//                JSONObject obj= new JSONObject(val);
-//                if(obj.getString("result").equals("ok"))
-//                {
-//                    Log.e("status", "successfully uploaded");
-//                    File f = new File(imagePath);
-//                    f.delete();
-//                    Log.e("status", "successfully Deleted"+imagePath+".jpg");
-//                }
-//            }
-//            if (resEntity != null) {
-//                resEntity.consumeContent();
-//            }
-//
-//            httpclient.getConnectionManager().shutdown();
-//
-//
-//            Log.e("send post", "ended");
-//
-//        }catch (HttpHostConnectException e)
-//        {
-//            Log.e("SendImage", e.getMessage());
-//        }catch (UnknownHostException e)
-//        {
-//            Log.e("Camera_app host error", e.getMessage());
-//
-//            // this is handled when wifi or internet is unavailabe.
-//        }
-//        catch (JSONException e)
-//        {
-//            Log.e("JSon error", e.getMessage());
-//
-//        }
-//        catch (Exception e)
-//        {
-//            Log.e("Camera app", e.getMessage());
-//
-//        }
-//
-//
-//    }
-
-
+    public class TakePhoto extends TimerTask {
+        @Override
+        public void run() {
+            Log.e("camera ", "pic" + count);
+            mCamera.takePicture(null, null, jpegCallback);
+            if (count == 5) {
+                t.cancel();
+                clickPhoto.cancel();
+                count = 10;
+                timer = new Timer();
+                changeImage = new ChangePhoto();
+                timer.schedule(changeImage, 0, 1000);//Update text every second
+            }
+            count++;
+        }
+    }
 
 }

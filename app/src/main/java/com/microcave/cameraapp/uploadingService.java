@@ -23,27 +23,23 @@ import java.io.File;
 import java.net.UnknownHostException;
 
 
-public class uploadingService extends IntentService {
-    public uploadingService() {
-        super("uploadingService");
+public class UploadingService extends IntentService {
+    String url = "https://image-judger.herokuapp.com/api/images";
+    String path;
+
+    public UploadingService() {
+        super("UploadingService");
     }
 
-    String url;
-    String path;
     @Override
     protected void onHandleIntent(Intent intent) {
-
-        url=intent.getStringExtra("url");
-        path=intent.getStringExtra("path");
-        Log.e("url",url);
-        Log.e("path",path);
-
+        path = intent.getStringExtra("path");
+        Log.e("url", url);
+        Log.e("path", path);
         sendPost(url, path);
-
-
     }
 
-    public  void sendPost(String url, String imagePath)  {
+    public void sendPost(String url, String imagePath) {
         try {
             HttpClient httpclient = new DefaultHttpClient();
             httpclient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
@@ -62,19 +58,17 @@ public class uploadingService extends IntentService {
 
             HttpResponse response = httpclient.execute(httppost);
             HttpEntity resEntity = response.getEntity();
-            Log.e("res.entity" , response.getStatusLine()+ "");
+            Log.e("res.entity", response.getStatusLine() + "");
 
             if (resEntity != null) {
-                String val= EntityUtils.toString(resEntity);
+                String val = EntityUtils.toString(resEntity);
 
-
-                JSONObject obj= new JSONObject(val);
-                if(obj.getString("result").equals("ok"))
-                {
+                JSONObject obj = new JSONObject(val);
+                if (obj.getString("result").equals("ok")) {
                     Log.e("status", "successfully uploaded");
                     File f = new File(imagePath);
                     f.delete();
-                    Log.e("status", "successfully Deleted"+imagePath+".jpg");
+                    Log.e("status", "successfully Deleted" + imagePath + ".jpg");
                 }
             }
             if (resEntity != null) {
@@ -83,29 +77,16 @@ public class uploadingService extends IntentService {
 
             httpclient.getConnectionManager().shutdown();
 
-
-        }catch (HttpHostConnectException e)
-        {
+        } catch (HttpHostConnectException e) {
             Log.e("SendImage", e.getMessage());
-        }catch (UnknownHostException e)
-        {
+        } catch (UnknownHostException e) {
             Log.e("Camera_app host error", e.getMessage());
-
             // this is handled when wifi or internet is unavailabe.
-        }
-        catch (JSONException e)
-        {
+        } catch (JSONException e) {
             Log.e("JSon error", e.getMessage());
 
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             Log.e("Camera app", e.getMessage());
-
         }
-
-
     }
-
-
 }
